@@ -1,0 +1,102 @@
+﻿<Window x:Class="GenshinTimeSplitter.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:v="clr-namespace:GenshinTimeSplitter.Views"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:vm="clr-namespace:GenshinTimeSplitter.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
+        ResizeMode="NoResize"
+        Width="500" Height="430"
+        MaxWidth="500" MaxHeight="430"
+        Title="Genshin Sction Splitter">
+    <Window.Resources>
+        <v:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
+    </Window.Resources>
+    <StackPanel Margin="10" v:Spacing.Vertical="20" Orientation="Vertical">
+        <StackPanel v:Spacing.Vertical="5"
+                    IsEnabled="{Binding AnalyzeState.Value, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter='CanNotStart,CanStart'}">
+            <TextBlock Text="Movie FilePath" FontWeight="Bold"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" Text="{Binding MovieFilePath.Value, Mode=OneWay}" IsReadOnly="True" Background="LightGray"/>
+                <Button Grid.Column="2" Width="60" Content="Browse" Command="{Binding BrowseMovieFileCommand}"/>
+            </Grid>
+        </StackPanel>
+        <StackPanel v:Spacing.Vertical="5"
+                    IsEnabled="{Binding AnalyzeState.Value, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter='CanStart'}">
+            <StackPanel.Resources>
+                <Style TargetType="xctk:DateTimeUpDown">
+                    <Setter Property="Format" Value="Custom"/>
+                    <Setter Property="FormatString" Value="HH:mm:ss"/>
+                    <Setter Property="Width" Value="100"/>
+                </Style>
+            </StackPanel.Resources>
+            <TextBlock Text="Analyze Range" FontWeight="Bold"/>
+            <StackPanel v:Spacing.Horizontal="10" Orientation="Horizontal">
+                <!-- DateTimeUpDown is thrown Exception when over min/max. So trim value in ViewModel. -->
+                <xctk:DateTimeUpDown Value="{Binding StartRange.Value}"/>
+                <TextBlock Text="-"/>
+                <xctk:DateTimeUpDown Value="{Binding EndRange.Value}"/>
+                <TextBlock Text="TotalTime:" VerticalAlignment="Bottom"/>
+                <TextBlock Text="{Binding RangeTotalTimeSpan.Value, StringFormat={}{0:hh\\:mm\\:ss}}" VerticalAlignment="Bottom"/>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel v:Spacing.Vertical="5"
+                    IsEnabled="{Binding AnalyzeState.Value, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter='CanStart'}">
+            <TextBlock Text="Analyze Setting" FontWeight="Bold"/>
+            <StackPanel v:Spacing.Horizontal="10" Orientation="Horizontal">
+                <TextBlock Text="Region" VerticalAlignment="Center" Width="75"/>
+                <Button Width="100" Content="Config" Command="{Binding OpenSettingWindowCommand}"/>
+            </StackPanel>
+            <StackPanel v:Spacing.Horizontal="10" Orientation="Horizontal">
+                <TextBlock Text="DiffThreshold" VerticalAlignment="Center" Width="75"/>
+                <xctk:ByteUpDown Width="60" Value="{Binding DiffThreshold.Value}"/>
+                <TextBlock Text="ThreadNum" VerticalAlignment="Center"/>
+                <xctk:ByteUpDown Width="60" Value="{Binding ThreadNum.Value}" Maximum="64"/>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel v:Spacing.Vertical="10" Orientation="Vertical" HorizontalAlignment="Right">
+            <Button Width="80" Content="Start" Command="{Binding StartAnalyzeCommand}"/>
+            <Button Width="80" Content="Cancel" Command="{Binding CancelAnalyzeCommand}"/>
+        </StackPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="TextAlignment" Value="Right"/>
+                    <Setter Property="Margin" Value="10,0,0,0"/>
+                </Style>
+            </Grid.Resources>
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Progress Rate: "/>
+            <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding ProgressRate.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Remaining Time: "/>
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding RemainingTime.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Speed: "/>
+            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Speed.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Total Frame: "/>
+            <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding TotalFrame.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="Current Frame: "/>
+            <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding CurrentFrame.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="5" Text="Found Frame: "/>
+            <TextBlock Grid.Column="1" Grid.Row="5" Text="{Binding FoundFrame.Value}"/>
+        </Grid>
+    </StackPanel>
+</Window>

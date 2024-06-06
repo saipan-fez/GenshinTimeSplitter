@@ -1,0 +1,73 @@
+﻿<Window x:Class="GenshinTimeSplitter.Views.AnalyzeConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fa="http://schemas.fontawesome.com/icons/svg"
+        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+        xmlns:v="clr-namespace:GenshinTimeSplitter.Views"
+        mc:Ignorable="d"
+        Title="Config" Width="1280" Height="800">
+    <Grid>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </Style>
+            </StackPanel.Resources>
+            <TextBlock Text="Process"/>
+            <TextBlock Text="(1) Seek to LoadingScreen."/>
+            <TextBlock Text="(2) Move Red/Yellow/Blue/Green rectangles to a position where there is only a background color."/>
+            <TextBlock Text="(3) Press [OK] button."/>
+        </StackPanel>
+        <Viewbox Grid.Row="1">
+            <vlc:VideoView x:Name="player">
+                <Canvas x:Name="canvas">
+                    <Canvas.Resources>
+                        <Style TargetType="Thumb">
+                            <Setter Property="Opacity" Value="0.3"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate>
+                                        <Rectangle Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" Fill="{TemplateBinding Background}"/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Canvas.Resources>
+                    <Thumb x:Name="R1" Background="Red"/>
+                    <Thumb x:Name="R2" Background="Yellow"/>
+                    <Thumb x:Name="R3" Background="Blue"/>
+                    <Thumb x:Name="R4" Background="Green"/>
+                </Canvas>
+            </vlc:VideoView>
+        </Viewbox>
+        <TextBlock Grid.Row="2" x:Name="TimeTextBlock" Text="00:00:00" HorizontalAlignment="Right"/>
+        <Slider Grid.Row="3" x:Name="Seekbar" IsMoveToPointEnabled="True"/>
+        <StackPanel Grid.Row="4" v:Spacing.Horizontal="10" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+            <Button Width="35" Content="&lt;&lt;&lt;" ToolTip="-30sec" Click="ControlButton_Click" Tag="-30"/>
+            <Button Width="30" Content="&lt;&lt;"     ToolTip="-5sec"  Click="ControlButton_Click" Tag="-5"/>
+            <Button Width="30" Content="&lt;"         ToolTip="-1sec"  Click="ControlButton_Click" Tag="-1"/>
+            <Button Width="30" Content="&gt;"         ToolTip="+1sec"  Click="ControlButton_Click" Tag="1"/>
+            <Button Width="30" Content="&gt;&gt;"     ToolTip="+5sec"  Click="ControlButton_Click" Tag="5"/>
+            <Button Width="35" Content="&gt;&gt;&gt;" ToolTip="+30sec" Click="ControlButton_Click" Tag="30"/>
+        </StackPanel>
+        <StackPanel Grid.Row="5" v:Spacing.Horizontal="10" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
+            <Button Width="50" Content="Cancel" Tag="Cancel" Click="CloseButton_Click"/>
+            <Button Width="50" Content="OK"     Tag="OK"     Click="CloseButton_Click" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+    <Grid x:Name="LoadingGrid" Background="#88888888">
+        <fa:SvgAwesome Icon="Solid_Spinner" Height="100" Width="100" Spin="True" />
+    </Grid>
+    </Grid>
+</Window>

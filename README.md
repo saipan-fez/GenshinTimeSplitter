@@ -1,2 +1,77 @@
 # GenshinTimeSplitter
-Genshin Time Splitter For EE TA
+
+- [English](./README.en.md)
+- [日本語](./README.md)
+
+本アプリケーションはHoYoVerse社が提供する「原神」での精鋭狩りTA向けに、  
+動画を解析し、ロード画面ごとに時間を区切った csv / json / xspf を出力します。
+出力したファイルを使用して、精鋭1体当たりの時間効率などを算出できます。
+
+![](./doc/img/app.png)
+
+## Tutorial Video
+
+
+
+## 使用方法
+
+> [!IMPORTANT]
+> 本アプリの仕組み上、解析には可能な限り**高ビットレートの動画を使用**してください。  
+> 低ビットレートの動画では、検知結果が誤ったものになる可能性が高まります。  
+>   
+> **推奨ビットレート**  
+> 1920x1080 30fps: 10Mbps以上
+
+### アプリケーションの使用方法
+
+1. [Browse] ボタンから解析する動画を選択
+1. `Analyze Range` で解析する動画時間を調整
+1. `Analyze Setting` の設定値を変更 (下記参照)
+1. [Start] ボタンを押下
+
+結果は動画ファイルと同フォルダに出力されます。  
+出力されたファイルの使い方は下記の「出力ファイルの使用例」を参照してください。
+
+### Analyze Setting
+
+**Region**  
+ロード画面として解析する区域。  
+**動画の上下または左右に黒帯（ゲーム画面外）がある**  
+**ゲーム画面にオーバーレイしてタイマーなどを表示している**  
+上記のような場合は、ロード画面として判定する区域を調整してください。
+
+設定する区域は、真っ白または真っ黒の部分です。
+
+- [OK例](./doc/img/setting_region_OK.drawio.png)
+- [NG例](./doc/img/setting_region_NG.drawio.png)
+
+**DiffThreshold**  
+ロード画面として判定する閾値。  
+値を大きくすると、低ビットレートの動画でも検知することが可能になります。  
+ただし、誤検知する確率が増加するため、基本的には変更しないでください。
+
+**TheadNum**  
+解析に使用するスレッド数。  
+"0" の場合は全CPUコアが使用されます。  
+基本的には変更しなくて問題ありません。
+
+### 出力ファイルの使用例
+
+1. csvファイルをExcelなどの表計算ツールで開く
+1. xspファイルを [VLC MediaPlayer](https://www.videolan.org/vlc/) などの動画プレイヤー開く
+1. プレイリストから動画をシークしながら倒した精鋭数を手動でExcelファイルに記録する
+1. 区間ごとの時間と倒した精鋭数から、精鋭1体当たりの時間効率を求める
+
+> [!NOTE]
+> xspファイルはプレイリストファイルです。
+
+## 追加予定機能
+
+- マップを開いたタイミングでの分割
+
+## License
+
+[MIT License](./LICENSE)
+
+This project is not affiliated with HoYoVerse.
+Genshin Impact, game content and materials are trademarks and copyrights of HoYoVerse.

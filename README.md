@@ -9,9 +9,18 @@
 
 ![](./doc/img/app.png)
 
+## ダウンロード/インストール
+
+[GenshinTimeSplitter_x64.zip 最新版](https://github.com/saipan-fez/GenshinTimeSplitter/releases/latest/download/GenshinTimeSplitter_x64.zip)
+
+1. 上記リンクからダウンロード
+1. ダウンロードしたzipファイルを任意のフォルダへ展開
+
+> アンインストールする場合は、フォルダを削除してください。
+
 ## Tutorial Video
 
-
+TODO
 
 ## 使用方法
 
@@ -24,6 +33,7 @@
 
 ### アプリケーションの使用方法
 
+1. `GenshinTimeSplitter.exe` を起動
 1. [Browse] ボタンから解析する動画を選択
 1. `Analyze Range` で解析する動画時間を調整
 1. `Analyze Setting` の設定値を変更 (下記参照)

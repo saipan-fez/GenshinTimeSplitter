@@ -9,8 +9,18 @@ You can calculate time efficiency per elite enemy using the output files.
 
 ![](./doc/img/app.png)
 
+## Download / Install
+
+[GenshinTimeSplitter_x64.zip Latest Version](https://github.com/saipan-fez/GenshinTimeSplitter/releases/latest/download/GenshinTimeSplitter_x64.zip)
+
+1. Download from the link above
+1. Extract the downloaded zip file to any folder
+
+> To uninstall, please delete the folder.
+
 ## Tutorial Video
 
+TODO
 ## How to Use
 
 > [!IMPORTANT]

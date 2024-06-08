@@ -118,15 +118,16 @@ public sealed class SectionStartAnalyzer : IDisposable
 #endif
             _logger.LogDebug("parallelCount:{count}", parallelCount);
 
+            // add start frame info
+            var startPos = GetPos(analyzeStartTimeSpan);
+            _frameInfoCollection.Add(new FrameInfo(
+                startPos.posFrames,
+                TimeSpan.FromMilliseconds(startPos.posMsec),
+                ScreenType.AnalyzeStart));
+
             // seek start frame
             _logger.LogTrace("seek videocapture to start position");
             _videoCapture.PosMsec = (int)analyzeStartTimeSpan.TotalMilliseconds;
-
-            // add start frame info
-            _frameInfoCollection.Add(new FrameInfo(
-                _videoCapture.PosFrames,
-                TimeSpan.FromMilliseconds(_videoCapture.PosMsec),
-                ScreenType.AnalyzeStart));
 
             // raise event at started
             InvokeProgressChanged(0, 0);
@@ -151,10 +152,10 @@ public sealed class SectionStartAnalyzer : IDisposable
             token.ThrowIfCancellationRequested();
 
             // add end frame info
-            _videoCapture.PosMsec = (int)analyzeEndTimeSpan.TotalMilliseconds;
+            var endPos = GetPos(analyzeEndTimeSpan);
             _frameInfoCollection.Add(new FrameInfo(
-                _videoCapture.PosFrames,
-                TimeSpan.FromMilliseconds(_videoCapture.PosMsec),
+                endPos.posFrames,
+                TimeSpan.FromMilliseconds(endPos.posMsec),
                 ScreenType.AnalyzeEnd));
 
             _logger.LogDebug("finished to analyze frames.");
@@ -189,6 +190,15 @@ public sealed class SectionStartAnalyzer : IDisposable
         {
             throw;
         }
+    }
+
+    private (int posMsec, int posFrames) GetPos(TimeSpan timeSpan)
+    {
+        using var frameMat = new Mat<Vec3b>(new Size(_videoCapture.FrameWidth, _videoCapture.FrameHeight));
+        _videoCapture.PosMsec = (int)timeSpan.TotalMilliseconds;
+        _videoCapture.Read(frameMat);
+
+        return (_videoCapture.PosMsec, _videoCapture.PosFrames);
     }
 
     private void ThrowIfInvalidAnalyzeConfig(AnalyzeConfig config)

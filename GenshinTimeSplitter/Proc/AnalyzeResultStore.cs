@@ -74,15 +74,14 @@ public class AnalyzeResultStore
     {
         var movieFileUri = new Uri(movieFile);
         var tracks = analyzeResult.Sections
-            .Select(x => x.SectionStartedTimeSpan)
-            .Select((t, i) =>
+            .Select((s, i) =>
                 $"""
                 <track>
-                  <title>{t:hh\:mm\:ss}</title>
+                  <title>{s.No:00} - {s.SectionStartedTimeSpan:hh\:mm\:ss}</title>
                   <location>{movieFileUri.AbsoluteUri}</location>
                   <extension application="http://www.videolan.org/vlc/playlist/0">
                     <vlc:id>{i}</vlc:id>
-                    <vlc:option>start-time={(int)t.TotalSeconds}</vlc:option>
+                    <vlc:option>start-time={(int)s.SectionStartedTimeSpan.TotalSeconds}</vlc:option>
                   </extension>
                 </track>
                 """);

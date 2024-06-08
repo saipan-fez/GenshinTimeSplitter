@@ -250,6 +250,7 @@ public sealed class SectionStartAnalyzer : IDisposable
 
         var sectionInfo = new SectionInfo()
         {
+            No = 1,
             SectionStartedTimeSpan = analyzeStartTimeSpan
         };
 
@@ -294,6 +295,7 @@ public sealed class SectionStartAnalyzer : IDisposable
                         var nextSecionStartTime = f1.FrameTimeSpan + TimeSpan.FromSeconds(1d / _fps);
                         sectionInfo = new SectionInfo()
                         {
+                            No = sectionInfo.No + 1,
                             SectionStartedTimeSpan = nextSecionStartTime
                         };
                         i++;

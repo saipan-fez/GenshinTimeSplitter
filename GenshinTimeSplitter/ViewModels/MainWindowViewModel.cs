@@ -163,7 +163,7 @@ public class MainWindowViewModel : IDisposable
             else if (x > _maximumRange)
                 StartRange.Value = _maximumRange;
 
-            _logger.LogInformation("StartRange is updated. value:{value}", StartRange.Value);
+            _logger.LogDebug("StartRange is updated. value:{value}", StartRange.Value);
         }).AddTo(_disposables);
         EndRange.Subscribe(x =>
         {
@@ -172,14 +172,14 @@ public class MainWindowViewModel : IDisposable
             else if (x > _maximumRange)
                 EndRange.Value = _maximumRange;
 
-            _logger.LogInformation("EndRange is updated. value:{value}", EndRange.Value);
+            _logger.LogDebug("EndRange is updated. value:{value}", EndRange.Value);
         }).AddTo(_disposables);
 
         DiffThreshold.Subscribe(async x =>
         {
             if (_analyzeConfig.HasValue && x != _analyzeConfig.Value.DiffThreashold)
             {
-                _logger.LogInformation("DiffThreashold is updated. value:{value}", x);
+                _logger.LogDebug("DiffThreashold is updated. value:{value}", x);
 
                 _analyzeConfig = _analyzeConfig.Value with { DiffThreashold = x };
                 await SaveAnalyzeConfigAsync();
@@ -189,7 +189,7 @@ public class MainWindowViewModel : IDisposable
         {
             if (_analyzeConfig.HasValue && x != _analyzeConfig.Value.ParallelCount)
             {
-                _logger.LogInformation("ThreadNum is updated. value:{value}", x);
+                _logger.LogDebug("ThreadNum is updated. value:{value}", x);
 
                 _analyzeConfig = _analyzeConfig.Value with { ParallelCount = x };
                 await SaveAnalyzeConfigAsync();
@@ -198,7 +198,7 @@ public class MainWindowViewModel : IDisposable
 
         _analyzeState.Subscribe(s =>
         {
-            _logger.LogInformation("Analayze state is updated. state:{state}", s);
+            _logger.LogDebug("Analayze state is updated. state:{state}", s);
         }).AddTo(_disposables);
         #endregion
     }
@@ -444,7 +444,7 @@ public class MainWindowViewModel : IDisposable
             var analyzeConfigStore = scope.ServiceProvider.GetService<AnalyzeConfigStore>();
             await analyzeConfigStore.SaveAsync(_analyzeConfig.Value);
 
-            _logger.LogInformation("saved config file. config:{config}", _analyzeConfig);
+            _logger.LogDebug("saved config file. config:{config}", _analyzeConfig);
         }
         catch (Exception ex)
         {

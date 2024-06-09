@@ -16,6 +16,11 @@ public readonly record struct SectionInfo()
 {
     [JsonProperty]
     [Index(0)]
+    [Name("no")]
+    public int No { get; init; }
+
+    [JsonProperty]
+    [Index(1)]
     [Name("section_start")]
     public TimeSpan SectionStartedTimeSpan { get; init; }
 
@@ -25,7 +30,7 @@ public readonly record struct SectionInfo()
     public TimeSpan? MapOpenedTimeSpan { get; init; }
 
     [JsonProperty]
-    [Index(1)]
+    [Index(2)]
     [Name("load_start")]
     public TimeSpan? LoadScreenStartedTimeSpan { get; init; }
 
@@ -38,7 +43,7 @@ public readonly record struct SectionInfo()
             0d;
 
     [JsonProperty]
-    [Index(2)]
+    [Index(3)]
     [Name("seconds_from_section_start_to_load_start")]
     public readonly double SecondsFromSectionStartToLoadScreenStarted =>
         LoadScreenStartedTimeSpan.HasValue ?
@@ -58,17 +63,17 @@ public record struct AnalyzeConfig(
         const int RegionWidth  = 150;
         const int RegionHeight = 150;
 
-        var left_LeftRegion  = s.Width / 4 * 1 - RegionWidth / 2;
-        var left_RightRegion = s.Width / 4 * 3 - RegionWidth / 2;
+        var left_LeftRegion  = s.Width  / 4 * 1 - RegionWidth  / 2;
+        var left_RightRegion = s.Width  / 4 * 3 - RegionWidth  / 2;
         var top_TopRegion    = s.Height / 4 * 1 - RegionHeight / 2;
         var top_BottomRegion = top_TopRegion + RegionHeight + 100;
 
         var regions = new Rect[]
         {
-            new Rect(left_LeftRegion, top_TopRegion, RegionWidth, RegionHeight), // Left Top
-            new Rect(left_RightRegion, top_TopRegion, RegionWidth, RegionHeight), // Right Top
-            new Rect(left_LeftRegion, top_BottomRegion, RegionWidth, RegionHeight), // Left  Bottom
-            new Rect(left_RightRegion, top_BottomRegion, RegionWidth, RegionHeight), // Right Bottom
+            new Rect(left_LeftRegion,  top_TopRegion,    RegionWidth, RegionHeight),    // Left Top
+            new Rect(left_RightRegion, top_TopRegion,    RegionWidth, RegionHeight),    // Right Top
+            new Rect(left_LeftRegion,  top_BottomRegion, RegionWidth, RegionHeight),    // Left  Bottom
+            new Rect(left_RightRegion, top_BottomRegion, RegionWidth, RegionHeight),    // Right Bottom
         };
 
         return new AnalyzeConfig(

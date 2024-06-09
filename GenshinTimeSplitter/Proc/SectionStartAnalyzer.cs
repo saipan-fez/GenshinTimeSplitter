@@ -1,5 +1,25 @@
-﻿using GenshinTimeSplitter.Extensions;
+﻿#if DEBUG
+/*
+ * If you fix of update process only after analyze, 
+ * you can save/load analyze result(_frameInfoCollection) to/from file.
+ *
+ * [Usage]
+ * 1. Uncomment "SAVE_FRAME_INFO_COLLECTION"
+ * 2. Execute AnalyzeAsync()
+ *    -> saved files
+ * 3. Stop application
+ * 4. Uncomment "LOAD_FRAME_INFO_COLLECTION"
+ * 5. Execute AnalyzeAsync()
+ *    -> load files without Analyze
+ */
+
+//#define SAVE_FRAME_INFO_COLLECTION
+//#define LOAD_FRAME_INFO_COLLECTION
+#endif
+
+using GenshinTimeSplitter.Extensions;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
@@ -26,6 +46,7 @@ public sealed class SectionStartAnalyzer : IDisposable
 {
     private readonly ILogger<SectionStartAnalyzer> _logger;
     private readonly VideoCapture _videoCapture;
+    private readonly string _filePath;
 
     public delegate void ProgressEvent(object sender, Progress progress);
     public event ProgressEvent ProgressChanged;
@@ -39,6 +60,7 @@ public sealed class SectionStartAnalyzer : IDisposable
         bool isUseHWAcc = false)
     {
         _logger = logger;
+        _filePath = filePath;
 
         if (isUseHWAcc)
         {
@@ -118,15 +140,24 @@ public sealed class SectionStartAnalyzer : IDisposable
 #endif
             _logger.LogDebug("parallelCount:{count}", parallelCount);
 
+#if !LOAD_FRAME_INFO_COLLECTION
+            // add start frame info
+            var startPos = GetPos(analyzeStartTimeSpan);
+            _frameInfoCollection.Add(new FrameInfo(
+                startPos.posFrames,
+                startPos.posTime,
+                ScreenType.AnalyzeStart));
+
+            // add end frame info
+            var endPos = GetPos(analyzeEndTimeSpan);
+            _frameInfoCollection.Add(new FrameInfo(
+                endPos.posFrames,
+                endPos.posTime,
+                ScreenType.AnalyzeEnd));
+
             // seek start frame
             _logger.LogTrace("seek videocapture to start position");
-            _videoCapture.PosMsec = (int)analyzeStartTimeSpan.TotalMilliseconds;
-
-            // add start frame info
-            _frameInfoCollection.Add(new FrameInfo(
-                _videoCapture.PosFrames,
-                TimeSpan.FromMilliseconds(_videoCapture.PosMsec),
-                ScreenType.AnalyzeStart));
+            _videoCapture.Seek(analyzeStartTimeSpan);
 
             // raise event at started
             InvokeProgressChanged(0, 0);
@@ -150,14 +181,23 @@ public sealed class SectionStartAnalyzer : IDisposable
             await Task.WhenAll(taskCollection);
             token.ThrowIfCancellationRequested();
 
-            // add end frame info
-            _videoCapture.PosMsec = (int)analyzeEndTimeSpan.TotalMilliseconds;
-            _frameInfoCollection.Add(new FrameInfo(
-                _videoCapture.PosFrames,
-                TimeSpan.FromMilliseconds(_videoCapture.PosMsec),
-                ScreenType.AnalyzeEnd));
-
             _logger.LogDebug("finished to analyze frames.");
+
+#if SAVE_FRAME_INFO_COLLECTION
+            var list = _frameInfoCollection.ToList();
+            var json = JsonConvert.SerializeObject(list);
+            var jsonFilePath = _filePath + "_frameinfo.json";
+            await System.IO.File.WriteAllTextAsync(jsonFilePath, json);
+#endif
+#else
+            var list = _frameInfoCollection.ToList();
+            var jsonFilePath = _filePath + "_frameinfo.json";
+            var json = await System.IO.File.ReadAllTextAsync(jsonFilePath);
+            var frameInfoCollection = JsonConvert.DeserializeObject<FrameInfo[]>(json);
+            _frameInfoCollection.Clear();
+            foreach (var f in frameInfoCollection)
+                _frameInfoCollection.Add(f);
+#endif
 
             // raise event at ended
             InvokeProgressChanged(_totalFrameCount, _foundSectionFrameCount);
@@ -165,10 +205,7 @@ public sealed class SectionStartAnalyzer : IDisposable
             _logger.LogTrace("frameInfoCollection:{collection}", _frameInfoCollection);
 
             // get section start time from analyzed result
-            var sectionInfoCollection = GetSectionInfoCollection(
-                analyzeStartTimeSpan,
-                analyzeEndTimeSpan,
-                _frameInfoCollection);
+            var sectionInfoCollection = GetSectionInfoCollection(_frameInfoCollection);
             _logger.LogDebug("got section info. count:{count}", sectionInfoCollection.Length);
 
             return new AnalyzeResult(
@@ -191,6 +228,14 @@ public sealed class SectionStartAnalyzer : IDisposable
         }
     }
 
+    private (TimeSpan posTime, int posFrames) GetPos(TimeSpan timeSpan)
+    {
+        _videoCapture.Seek(timeSpan);
+        return (
+            _videoCapture.GetPosTimeSpan(),
+            _videoCapture.PosFrames);
+    }
+
     private void ThrowIfInvalidAnalyzeConfig(AnalyzeConfig config)
     {
         var w = _videoCapture.FrameWidth;
@@ -211,112 +256,108 @@ public sealed class SectionStartAnalyzer : IDisposable
     }
 
     private SectionInfo[] GetSectionInfoCollection(
-        TimeSpan analyzeStartTimeSpan,
-        TimeSpan analyzeEndTimeSpan,
         IEnumerable<FrameInfo> frameInfoCollection)
     {
-        const int accept_false_positives_frame_count = 3;
-
-        var array = frameInfoCollection
-            .Where(x => x.FrameTimeSpan >= analyzeStartTimeSpan)
+        // normalize the frameInfoCollection
+        IEnumerable<FrameInfo> normalizedFrameInfoCollection;
+        var analyzeStartFrame = frameInfoCollection.First(x => x.ScreenType is ScreenType.AnalyzeStart);
+        var analyzeEndFrame   = frameInfoCollection.First(x => x.ScreenType is ScreenType.AnalyzeEnd);
+        normalizedFrameInfoCollection = frameInfoCollection
+            .Where(x => analyzeStartFrame.FrameTimeSpan <= x.FrameTimeSpan && x.FrameTimeSpan <= analyzeEndFrame.FrameTimeSpan)
             .Where(x => x.ScreenType is not ScreenType.Other)
-            .OrderBy(x => x.FramePos)
-            .Select((x, i) => new { Value = x, Index = i })
-            .ToArray();
+            .OrderBy(x => x.FramePos);
+        if (normalizedFrameInfoCollection.First().ScreenType is not ScreenType.AnalyzeStart)
+        {
+            // first element must be AnalyzeStart
+            normalizedFrameInfoCollection = normalizedFrameInfoCollection.SkipWhile(x => x.ScreenType is ScreenType.AnalyzeStart);
+        }
+        if (normalizedFrameInfoCollection.Last().ScreenType is not ScreenType.AnalyzeEnd)
+        {
+            // last element must be AnalyzeEnd
+            var endIndex = normalizedFrameInfoCollection.ToList().FindLastIndex(x => x.ScreenType is ScreenType.AnalyzeEnd);
+            normalizedFrameInfoCollection = normalizedFrameInfoCollection.Take(endIndex + 1);
+        }
 
-        // Yelan Q etc are occasionally misidentified as a LoadingScreen.
-        // To address this issue, the frame that is more than "3" frames apart from the surrounding elements is excluded.
-        var sortedFrameInfoArray = array
-            .Where(x =>
+        var sortedArray = normalizedFrameInfoCollection.ToArray();
+        _logger.LogTrace("sortedArray:{sortedArray}", sortedArray);
+
+        // Group FrameInfo based on the following conditions:
+        // - ScreenType is the same
+        // - FramePos is sufficiently close (within 100 milliseconds)
+        //   -> Considering the possibility that a few frames might not be recognized due to misdetection
+        var frameGroups = new List<List<FrameInfo>>();
+        var idx = 0;
+        while (idx < sortedArray.Length)
+        {
+            var group = new List<FrameInfo>();
+            for (var j = idx; j < sortedArray.Length; j++)
             {
-                if (x.Value.ScreenType is ScreenType.LoadingScreen &&
-                    x.Index != 0 &&
-                    x.Index != array.Length - 1)
-                {
-                    var currentFramePos = x.Value.FramePos;
-                    var prevFramePos    = array[x.Index - 1].Value.FramePos;
-                    var nextFramePos    = array[x.Index + 1].Value.FramePos;
-                    return
-                        Math.Abs(currentFramePos - prevFramePos) <= accept_false_positives_frame_count ||
-                        Math.Abs(currentFramePos - nextFramePos) <= accept_false_positives_frame_count;
-                }
-                else
-                {
-                    return true;
-                }
-            })
-            .Select(x => x.Value)
-            .ToArray();
+                var current = sortedArray[j];
+                group.Add(current);
 
+                if (j == sortedArray.Length - 1)
+                    break;
+
+                // break if the next frame does not meet the grouping conditions
+                var next = sortedArray[j + 1];
+                var isDifferentScreenType = current.ScreenType != next.ScreenType;
+                var isFarFramePos         = (next.FrameTimeSpan - current.FrameTimeSpan) > TimeSpan.FromMilliseconds(100);
+                if (isDifferentScreenType || isFarFramePos)
+                {
+                    idx = j;
+                    break;
+                }
+            }
+            frameGroups.Add(group);
+            idx++;
+        }
+
+        // Exclude the following from frameGroups:
+        // - ScreenType is LoadingScreen AND the number of frames in the group is 3 or less
+        //   -> Sometimes a few frames are misdetected as LoadingScreen, such as with Yelan Q CutScene
+        frameGroups.RemoveAll(group =>
+            group.All(x => x.ScreenType is ScreenType.LoadingScreen) &&
+            group.Count <= 3);
+
+        // Convert frameGroups to SectionInfo collection
+        var sectionInfoList = new List<SectionInfo>();
         var sectionInfo = new SectionInfo()
         {
-            SectionStartedTimeSpan = analyzeStartTimeSpan
+            No = 1,
+            SectionStartedTimeSpan = analyzeStartFrame.FrameTimeSpan
         };
-
-        var i = 0;
-        var sectionInfoCollection = new List<SectionInfo>();
-        while (i < sortedFrameInfoArray.Length - 1)
+        foreach (var group in frameGroups)
         {
-            var currentFrame = sortedFrameInfoArray[i];
-
-            if (currentFrame.ScreenType is ScreenType.MapScreen &&
-                sectionInfo.MapOpenedTimeSpan.HasValue is false)
+            if (group.All(x => x.ScreenType is ScreenType.LoadingScreen))
             {
-                _logger.LogTrace("MapScreen found. {frame}", currentFrame);
-                sectionInfo = sectionInfo with { MapOpenedTimeSpan = currentFrame.FrameTimeSpan };
-                i++;
-            }
-            else if (currentFrame.ScreenType is ScreenType.LoadingScreen)
-            {
-                _logger.LogTrace("LoadingScreen found. {frame}", currentFrame);
+                var startLoadingScreenFrame = group.First();
+                var lastLoadingScreenFrame  = group.Last();
+                _logger.LogTrace("LoadingScreen found. start:{start} end:{end}", startLoadingScreenFrame, lastLoadingScreenFrame);
 
-                sectionInfo = sectionInfo with { LoadScreenStartedTimeSpan = currentFrame.FrameTimeSpan };
-                sectionInfoCollection.Add(sectionInfo);
+                // add section
+                sectionInfo = sectionInfo with { LoadScreenStartedTimeSpan = startLoadingScreenFrame.FrameTimeSpan };
+                sectionInfoList.Add(sectionInfo);
 
-                // seek to end of loading screen frame
-                // - Next frame is not LoadingScreen
-                // - Next frame position is over "3" frame
-                //   -> There may be cases where analysis is not successful due to noise in the video.
-                for (; i < sortedFrameInfoArray.Length - 1; i++)
+                // update sectionInfo for next section
+                //   The start time of the next section will be the frame following the end frame of the loading screen.
+                var nextSecionStartTime = lastLoadingScreenFrame.FrameTimeSpan + TimeSpan.FromSeconds(1d / _fps);
+                sectionInfo = new SectionInfo()
                 {
-                    var f1 = sortedFrameInfoArray[i];
-                    var f2 = sortedFrameInfoArray[i + 1];
-                    bool IsLoadingScreenEnd()
-                    {
-                        return
-                            f1.ScreenType is ScreenType.LoadingScreen &&
-                            f2.ScreenType is ScreenType.LoadingScreen &&
-                            f2.FramePos - f1.FramePos > accept_false_positives_frame_count;
-                    }
-                    if (f2.ScreenType is not ScreenType.LoadingScreen || IsLoadingScreenEnd())
-                    {
-                        // Update the sectionInfo for the next section
-                        var nextSecionStartTime = f1.FrameTimeSpan + TimeSpan.FromSeconds(1d / _fps);
-                        sectionInfo = new SectionInfo()
-                        {
-                            SectionStartedTimeSpan = nextSecionStartTime
-                        };
-                        i++;
-
-                        _logger.LogTrace("LoadingScreen End found. {frame}", currentFrame);
-
-                        break;
-                    }
-                }
+                    No = sectionInfo.No + 1,
+                    SectionStartedTimeSpan = nextSecionStartTime
+                };
             }
-            else
+            else if (group.All(x => x.ScreenType is ScreenType.AnalyzeEnd))
             {
-                i++;
+                var frame = group.First();
+                _logger.LogTrace("LoadingScreen End found. {frame}", frame);
+
+                sectionInfo = sectionInfo with { LoadScreenStartedTimeSpan = frame.FrameTimeSpan };
+                sectionInfoList.Add(sectionInfo);
             }
         }
-        // add end
-        if (sectionInfo.LoadScreenStartedTimeSpan is null)
-        {
-            sectionInfo = sectionInfo with { LoadScreenStartedTimeSpan = analyzeEndTimeSpan };
-            sectionInfoCollection.Add(sectionInfo);
-        }
 
-        return sectionInfoCollection.ToArray();
+        return sectionInfoList.ToArray();
     }
 
     private readonly record struct FrameInfo(int FramePos, TimeSpan FrameTimeSpan, ScreenType ScreenType);
@@ -349,7 +390,7 @@ public sealed class SectionStartAnalyzer : IDisposable
                 lock (_lockObj)
                 {
                     result = _videoCapture.Read(frameMat);
-                    currentFrameTimeSpan = TimeSpan.FromMilliseconds(_videoCapture.PosMsec);
+                    currentFrameTimeSpan = _videoCapture.GetPosTimeSpan();
                     currentFrameCount = _videoCapture.PosFrames;
                     _logger.LogTrace("read frame. frame:{frame}", currentFrameCount);
                 }

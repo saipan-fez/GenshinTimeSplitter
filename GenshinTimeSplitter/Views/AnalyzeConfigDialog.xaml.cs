@@ -170,7 +170,7 @@ public partial class AnalyzeConfigDialog : Window
     {
         var time = TimeSpan.FromMilliseconds(Seekbar.Value);
 
-        _logger.LogDebug("movie seeked from slider. time:{time}", time);
+        _logger.LogTrace("movie seeked from slider. time:{time}", time);
 
         _mediaPlayer.SeekTo(time);
         TimeTextBlock.Text = time.ToString(@"hh\:mm\:ss");
@@ -187,7 +187,7 @@ public partial class AnalyzeConfigDialog : Window
         var newValue = Seekbar.Value + TimeSpan.FromSeconds(sec).TotalMilliseconds;
         newValue = Math.Min(Seekbar.Maximum, Math.Max(newValue, Seekbar.Minimum));
 
-        _logger.LogDebug("movie seeked from button. time_ms:{time}", newValue);
+        _logger.LogTrace("movie seeked from button. time_ms:{time}", newValue);
 
         Seekbar.Value = newValue;
     }

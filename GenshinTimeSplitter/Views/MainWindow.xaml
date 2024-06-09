@@ -35,7 +35,7 @@
                 <Style TargetType="xctk:DateTimeUpDown">
                     <Setter Property="Format" Value="Custom"/>
                     <Setter Property="FormatString" Value="HH:mm:ss"/>
-                    <Setter Property="Width" Value="100"/>
+                    <Setter Property="Width" Value="80"/>
                 </Style>
             </StackPanel.Resources>
             <TextBlock Text="Analyze Range" FontWeight="Bold"/>

@@ -13,7 +13,7 @@ You can calculate time efficiency per elite enemy using the output files.
 1. Download from the link above
 1. Extract the downloaded zip file to any folder
 
-> To uninstall, please delete the folder.
+To uninstall, please delete the folder.
 
 ## Tutorial Video
 
@@ -43,7 +43,7 @@ TODO
 1. Press the [Start] button.
 
 Results are outputted in the same folder as the video file.  
-For how to use the output files, see the section "Example of Using Output Files" below.  
+For how to use the output files, see [How to Use the Output Files](./output_file_usage.en.md) below.  
 
 ### Analyze Settings
 
@@ -70,16 +70,6 @@ However, it increases the chance of false detections, so we recommended not to c
 The number of threads to use for analysis.  
 If "0", all CPU cores will be used.  
 Generally, there is no need to change it.  
-
-### Examples of Using Output Files
-
-1. Open the csv file with a spreadsheet tool like Excel
-1. Open the xspf file with a video player like [VLC MediaPlayer](https://www.videolan.org/vlc/)
-1. Manually record the number of elite enemies defeated while seeking through the video from the playlist
-1. Calculate the time efficiency per elite defeated based on the time and number of elites defeated per segment
-
-!!! NOTE
-    xspf file is a playlist file.
 
 ## Planned Features
 

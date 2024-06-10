@@ -3,14 +3,22 @@ site_url: https://saipan-fez.github.io/GenshinTimeSplitter
 repo_url: https://github.com/saipan-fez/GenshinTimeSplitter
 
 theme:
+  language: ja
   name: material
   palette:
     primary: white
   icon:
     repo: fontawesome/brands/github
   features:
-    - header.autohide
+    - navigation.instant
     - navigation.tabs
+    - navigation.expand
+    - toc.integrate
+
+nav:
+  - はじめに: index.md
+  - 出力ファイル: output_file_usage.md
+  - 仕組み: mechanism.md
 
 extra:
   alternate:

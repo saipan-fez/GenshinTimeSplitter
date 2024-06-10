@@ -1,5 +1,5 @@
 
-# How to Use the Output Files
+# Output Files
 
 ## Usage Example
 

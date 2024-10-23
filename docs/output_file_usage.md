@@ -19,6 +19,7 @@
 |section_start|セクションが開始した動画内時間|
 |load_start|ロード画面が表示された動画内時間|
 |seconds_from_section_start_to_load_start|セクション開始からロード画面表示までの時間(秒)|
+|seconds_from_section_start_to_load_end|セクション開始からロード画面終了までの時間(秒)|
 
 ### XSPFファイル
 
@@ -50,3 +51,4 @@ VLC MediaPlayer で下記のよう設定することでスムーズに精鋭の�
 |　LoadScreenStartedTimeSpan|ロード画面が表示された動画内時間|
 |　SecondsFromSectionStartToMapOpened|(reserved)always null|
 |　SecondsFromSectionStartToLoadScreenStarted|セクション開始からロード画面表示までの時間(秒)|
+|　SecondsFromSectionStartToLoadScreenFinished|セクション開始からロード画面終了までの時間(秒)|

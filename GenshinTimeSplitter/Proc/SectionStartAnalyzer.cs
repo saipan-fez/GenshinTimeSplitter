@@ -335,7 +335,11 @@ public sealed class SectionStartAnalyzer : IDisposable
                 _logger.LogTrace("LoadingScreen found. start:{start} end:{end}", startLoadingScreenFrame, lastLoadingScreenFrame);
 
                 // add section
-                sectionInfo = sectionInfo with { LoadScreenStartedTimeSpan = startLoadingScreenFrame.FrameTimeSpan };
+                sectionInfo = sectionInfo with
+                {
+                    LoadScreenStartedTimeSpan = startLoadingScreenFrame.FrameTimeSpan,
+                    LoadScreenFinishedTimeSpan = lastLoadingScreenFrame.FrameTimeSpan,
+                };
                 sectionInfoList.Add(sectionInfo);
 
                 // update sectionInfo for next section
@@ -352,7 +356,11 @@ public sealed class SectionStartAnalyzer : IDisposable
                 var frame = group.First();
                 _logger.LogTrace("LoadingScreen End found. {frame}", frame);
 
-                sectionInfo = sectionInfo with { LoadScreenStartedTimeSpan = frame.FrameTimeSpan };
+                sectionInfo = sectionInfo with
+                {
+                    LoadScreenStartedTimeSpan = frame.FrameTimeSpan,
+                    LoadScreenFinishedTimeSpan = frame.FrameTimeSpan,
+                };
                 sectionInfoList.Add(sectionInfo);
             }
         }

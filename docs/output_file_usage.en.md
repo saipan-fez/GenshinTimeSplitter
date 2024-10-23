@@ -20,6 +20,7 @@ The specifications for each column are as follows:
 |section_start|Time within the video when the section started|
 |load_start|Time within the video when the loading screen appeared|
 |seconds_from_section_start_to_load_start|Time from the start of the section to the appearance of the loading screen (in seconds)|
+|seconds_from_section_start_to_load_end|Time from the start of the section to the end of the loading screen (in seconds)|
 
 ### XSPF File
 
@@ -51,3 +52,4 @@ The specifications for each Key are as follows:
 |　LoadScreenStartedTimeSpan|Time within the video when the loading screen appeared|
 |　SecondsFromSectionStartToMapOpened|(reserved) always null|
 |　SecondsFromSectionStartToLoadScreenStarted|Time from the start of the section to the appearance of the loading screen (in seconds)|
+|　SecondsFromSectionStartToLoadScreenFinished|Time from the start of the section to the end of the loading screen (in seconds)|

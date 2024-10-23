@@ -35,6 +35,11 @@ public readonly record struct SectionInfo()
     public TimeSpan? LoadScreenStartedTimeSpan { get; init; }
 
     [JsonProperty]
+    [Index(3)]
+    [Name("load_end")]
+    public TimeSpan? LoadScreenFinishedTimeSpan { get; init; }
+
+    [JsonProperty]
     [Ignore]
     [Name("seconds_from_section_start_to_map_open")]
     public readonly double SecondsFromSectionStartToMapOpened =>
@@ -43,11 +48,19 @@ public readonly record struct SectionInfo()
             0d;
 
     [JsonProperty]
-    [Index(3)]
+    [Index(4)]
     [Name("seconds_from_section_start_to_load_start")]
     public readonly double SecondsFromSectionStartToLoadScreenStarted =>
         LoadScreenStartedTimeSpan.HasValue ?
             (LoadScreenStartedTimeSpan.Value - SectionStartedTimeSpan).TotalSeconds :
+            0d;
+
+    [JsonProperty]
+    [Index(5)]
+    [Name("seconds_from_section_start_to_load_end")]
+    public readonly double SecondsFromSectionStartToLoadScreenFinished =>
+        LoadScreenFinishedTimeSpan.HasValue ?
+            (LoadScreenFinishedTimeSpan.Value - SectionStartedTimeSpan).TotalSeconds :
             0d;
 }
 

@@ -71,6 +71,23 @@ The number of threads to use for analysis.
 If "0", all CPU cores will be used.  
 Generally, there is no need to change it.  
 
+#### FalseDetection(ms)
+
+The time (in milliseconds) used to determine if a warp is a false detection.  
+Times shorter than this value will not be treated as a warp.  
+
+##### If a warp is incorrectly detected when there is no warp
+
+Increase the number.  
+Note that it is recommended to set the maximum value to `300`.  
+Setting it too high may prevent recognition of normal warps.
+
+##### If a warp is not detected when there actually is one
+
+Decrease the number.  
+Note that it is recommended to set the minimum value to `90`.  
+Setting it too low may cause non-warping areas to be mistakenly recognized as warps.
+
 ## Planned Features
 
 - Splitting at the moment the map is opened

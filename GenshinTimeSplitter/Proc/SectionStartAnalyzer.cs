@@ -205,7 +205,8 @@ public sealed class SectionStartAnalyzer : IDisposable
             _logger.LogTrace("frameInfoCollection:{collection}", _frameInfoCollection);
 
             // get section start time from analyzed result
-            var sectionInfoCollection = GetSectionInfoCollection(_frameInfoCollection);
+            var timeSpanAsFalseDetection = TimeSpan.FromMilliseconds(config.FalseDetectionMilliSeconds);
+            var sectionInfoCollection = GetSectionInfoCollection(_frameInfoCollection, timeSpanAsFalseDetection);
             _logger.LogDebug("got section info. count:{count}", sectionInfoCollection.Length);
 
             return new AnalyzeResult(
@@ -256,7 +257,8 @@ public sealed class SectionStartAnalyzer : IDisposable
     }
 
     private SectionInfo[] GetSectionInfoCollection(
-        IEnumerable<FrameInfo> frameInfoCollection)
+        IEnumerable<FrameInfo> frameInfoCollection,
+        TimeSpan timeSpanAsFalseDetection)
     {
         // normalize the frameInfoCollection
         IEnumerable<FrameInfo> normalizedFrameInfoCollection;
@@ -312,12 +314,14 @@ public sealed class SectionStartAnalyzer : IDisposable
             idx++;
         }
 
+        var timePerFrame = TimeSpan.FromSeconds(1d / _fps);
+
         // Exclude the following from frameGroups:
-        // - ScreenType is LoadingScreen AND the number of frames in the group is 3 or less
+        // - ScreenType is LoadingScreen AND the total time in the group is less than TimeSpanAsFalseDetection
         //   -> Sometimes a few frames are misdetected as LoadingScreen, such as with Yelan Q CutScene
         frameGroups.RemoveAll(group =>
             group.All(x => x.ScreenType is ScreenType.LoadingScreen) &&
-            group.Count <= 3);
+            group.Count * timePerFrame < timeSpanAsFalseDetection);
 
         // Convert frameGroups to SectionInfo collection
         var sectionInfoList = new List<SectionInfo>();
@@ -344,7 +348,7 @@ public sealed class SectionStartAnalyzer : IDisposable
 
                 // update sectionInfo for next section
                 //   The start time of the next section will be the frame following the end frame of the loading screen.
-                var nextSecionStartTime = lastLoadingScreenFrame.FrameTimeSpan + TimeSpan.FromSeconds(1d / _fps);
+                var nextSecionStartTime = lastLoadingScreenFrame.FrameTimeSpan + timePerFrame;
                 sectionInfo = new SectionInfo()
                 {
                     No = sectionInfo.No + 1,

@@ -35,6 +35,7 @@ public class MainWindowViewModel : IDisposable
     public ReactiveProperty<DateTime> EndRange { get; } = new(_rangeBaseDateTime);
     public ReactiveProperty<byte> DiffThreshold { get; } = new(0);
     public ReactiveProperty<byte> ThreadNum { get; } = new(0);
+    public ReactiveProperty<int> FalseDetectionMs { get; } = new(0);
 
     public ReadOnlyReactiveProperty<string> MovieFilePath { get; }
     public ReadOnlyReactiveProperty<AnalyzeStateType> AnalyzeState { get; }
@@ -195,6 +196,16 @@ public class MainWindowViewModel : IDisposable
                 await SaveAnalyzeConfigAsync();
             }
         }).AddTo(_disposables);
+        FalseDetectionMs.Subscribe(async x =>
+        {
+            if (_analyzeConfig.HasValue && x != _analyzeConfig.Value.FalseDetectionMilliSeconds)
+            {
+                _logger.LogDebug("FalseDetectionMilliSeconds is updated. value:{value}", x);
+
+                _analyzeConfig = _analyzeConfig.Value with { FalseDetectionMilliSeconds = x };
+                await SaveAnalyzeConfigAsync();
+            }
+        }).AddTo(_disposables);
 
         _analyzeState.Subscribe(s =>
         {
@@ -277,6 +288,7 @@ public class MainWindowViewModel : IDisposable
             // update field values
             DiffThreshold.Value = _analyzeConfig.Value.DiffThreashold;
             ThreadNum.Value = _analyzeConfig.Value.ParallelCount;
+            FalseDetectionMs.Value = _analyzeConfig.Value.FalseDetectionMilliSeconds;
 
             var movieEndDateTime = _rangeBaseDateTime + _sectionStartAnalyzer.MovieTimeSpan;
             _maximumRange = movieEndDateTime;

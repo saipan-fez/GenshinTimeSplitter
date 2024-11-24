@@ -9,8 +9,8 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
         ResizeMode="NoResize"
-        Width="500" Height="430"
-        MaxWidth="500" MaxHeight="430"
+        Width="500" Height="450"
+        MaxWidth="500" MaxHeight="450"
         Title="Genshin Sction Splitter">
     <Window.Resources>
         <v:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
@@ -51,27 +51,43 @@
         <StackPanel v:Spacing.Vertical="5"
                     IsEnabled="{Binding AnalyzeState.Value, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter='CanStart'}">
             <TextBlock Text="Analyze Setting" FontWeight="Bold"/>
-            <StackPanel v:Spacing.Horizontal="10" Orientation="Horizontal">
-                <TextBlock Text="Region" VerticalAlignment="Center" Width="75"/>
-                <Button Width="100" Content="Config" Command="{Binding OpenSettingWindowCommand}"/>
-            </StackPanel>
-            <StackPanel v:Spacing.Horizontal="10" Orientation="Horizontal">
-                <TextBlock Text="DiffThreshold" VerticalAlignment="Center" Width="75"/>
-                <xctk:ByteUpDown Width="60" Value="{Binding DiffThreshold.Value}"/>
-                <TextBlock Text="ThreadNum" VerticalAlignment="Center"/>
-                <xctk:ByteUpDown Width="60" Value="{Binding ThreadNum.Value}" Maximum="64"/>
-            </StackPanel>
-        </StackPanel>
-        <StackPanel v:Spacing.Vertical="10" Orientation="Vertical" HorizontalAlignment="Right">
-            <Button Width="80" Content="Start" Command="{Binding StartAnalyzeCommand}"/>
-            <Button Width="80" Content="Cancel" Command="{Binding CancelAnalyzeCommand}"/>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Region"/>
+                <Button Grid.Row="0" Grid.Column="1" Width="100" HorizontalAlignment="Left"
+                        Content="Config" Command="{Binding OpenSettingWindowCommand}"/>
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="DiffThreshold"/>
+                <xctk:ByteUpDown Grid.Row="2" Grid.Column="1" Width="60" HorizontalAlignment="Left"
+                                 Value="{Binding DiffThreshold.Value}"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="ThreadNum"/>
+                <xctk:ByteUpDown Grid.Row="4" Grid.Column="1" Width="60" HorizontalAlignment="Left"
+                                 Value="{Binding ThreadNum.Value}" Maximum="64"/>
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="FalseDetection(ms)"/>
+                <xctk:IntegerUpDown Grid.Row="6" Grid.Column="1" Width="60" HorizontalAlignment="Left"
+                                    Value="{Binding FalseDetectionMs.Value}" Minimum="0" Maximum="1000"/>
+            </Grid>
         </StackPanel>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -85,18 +101,25 @@
                     <Setter Property="Margin" Value="10,0,0,0"/>
                 </Style>
             </Grid.Resources>
-            <TextBlock Grid.Column="0" Grid.Row="0" Text="Progress Rate: "/>
-            <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding ProgressRate.Value}"/>
-            <TextBlock Grid.Column="0" Grid.Row="1" Text="Remaining Time: "/>
-            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding RemainingTime.Value}"/>
-            <TextBlock Grid.Column="0" Grid.Row="2" Text="Speed: "/>
-            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding Speed.Value}"/>
-            <TextBlock Grid.Column="0" Grid.Row="3" Text="Total Frame: "/>
-            <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding TotalFrame.Value}"/>
-            <TextBlock Grid.Column="0" Grid.Row="4" Text="Current Frame: "/>
-            <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding CurrentFrame.Value}"/>
-            <TextBlock Grid.Column="0" Grid.Row="5" Text="Found Frame: "/>
-            <TextBlock Grid.Column="1" Grid.Row="5" Text="{Binding FoundFrame.Value}"/>
+            <TextBlock Grid.ColumnSpan="4" Grid.Row="0" Text="Progress Informations" FontWeight="Bold"
+                       TextAlignment="Left" Margin="0"/>
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Progress Rate: "/>
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding ProgressRate.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="2" Text="Remaining Time: "/>
+            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding RemainingTime.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="3" Text="Speed: "/>
+            <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding Speed.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="4" Text="Total Frame: "/>
+            <TextBlock Grid.Column="1" Grid.Row="4" Text="{Binding TotalFrame.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="5" Text="Current Frame: "/>
+            <TextBlock Grid.Column="1" Grid.Row="5" Text="{Binding CurrentFrame.Value}"/>
+            <TextBlock Grid.Column="0" Grid.Row="6" Text="Found Frame: "/>
+            <TextBlock Grid.Column="1" Grid.Row="6" Text="{Binding FoundFrame.Value}"/>
+            <StackPanel Grid.Column="3" Grid.RowSpan="7" v:Spacing.Vertical="10" Orientation="Vertical"
+                        HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                <Button Width="80" Content="Start" Command="{Binding StartAnalyzeCommand}"/>
+                <Button Width="80" Content="Cancel" Command="{Binding CancelAnalyzeCommand}"/>
+            </StackPanel>
         </Grid>
     </StackPanel>
 </Window>

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "OK": {
+      "commandName": "Project",
+      "commandLineArgs": "-f \"D:\\capture\\Desktop\\2025-03-20_12-29-32.mp4\"\r\n-from 00:00:50\r\n-to 00:48:29\r\n-y\r\n"
+    },
+    "No-Args": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    }
+  }
+}

@@ -66,8 +66,8 @@ public sealed class SectionStartAnalyzer : IDisposable
         {
             // this setting is slower than default setting(no HWAcc).
             // probably memory copy speed from gpu to cpu is too slow.
-            var param = new VideoCapturePara(VideoAccelerationType.D3D11, 0);
-            _videoCapture = new VideoCapture(filePath, VideoCaptureAPIs.MSMF, param);
+            var param = new VideoCapturePara(VideoAccelerationType.Any, 0);
+            _videoCapture = new VideoCapture(filePath, VideoCaptureAPIs.ANY, param);
         }
         else
         {

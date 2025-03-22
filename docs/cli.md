@@ -20,17 +20,29 @@ GUI版をマルチプラットフォーム/コマンドラインから実行で�
 
 ### Mac
 
+1. dotnet ランタイムをインストール
+   ```sh
+   wget https://dot.net/v1/dotnet-install.sh
+   chmod +x dotnet-install.sh
+   ./dotnet-install.sh --channel 8.0 --runtime dotnet
+   ```
 1. 依存パッケージをインストール
    ```sh
    brew install pkg-config mono-libgdiplus gtk+ ffmpeg@4 glog yasm harfbuzz jpeg libpng libtiff openjpeg metis openblas opencore-amr protobuf tbb webp # openexr
    ```
-2. 実行権限を付与
+1. 実行権限を付与
    ```sh
    chmod +x GenshinTimeSplitterCLI
    ```
 
 ### Linux
 
+1. dotnet ランタイムをインストール
+   ```sh
+   wget https://dot.net/v1/dotnet-install.sh
+   chmod +x dotnet-install.sh
+   ./dotnet-install.sh --channel 8.0 --runtime dotnet
+   ```
 1. 依存パッケージをインストール
    ```sh
    sudo apt-get update -y 
@@ -59,7 +71,7 @@ GUI版をマルチプラットフォーム/コマンドラインから実行で�
        libtesseract-dev
    sudo ldconfig
    ```
-2. 実行権限を付与
+1. 実行権限を付与
    ```sh
    chmod +x GenshinTimeSplitterCLI
    ```

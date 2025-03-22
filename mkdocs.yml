@@ -17,6 +17,7 @@ theme:
 
 nav:
   - はじめに: index.md
+  - CLI版: cli.md
   - 出力ファイル: output_file_usage.md
   - 仕組み: mechanism.md
 

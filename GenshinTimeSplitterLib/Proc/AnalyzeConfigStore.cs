@@ -21,9 +21,14 @@ public class AnalyzeConfigStore
 
     public bool TryLoad(Size movieResolution, out AnalyzeConfig result)
     {
+        return TryLoad(movieResolution, ConfigFilePath, out result);
+    }
+
+    public bool TryLoad(Size movieResolution, string filePath, out AnalyzeConfig result)
+    {
         result = new();
 
-        if (!File.Exists(ConfigFilePath))
+        if (!File.Exists(filePath))
         {
             _logger.LogDebug("config file not found.");
             return false;
@@ -31,7 +36,7 @@ public class AnalyzeConfigStore
 
         try
         {
-            var fileContent = File.ReadAllText(ConfigFilePath);
+            var fileContent = File.ReadAllText(filePath);
             var config = JsonConvert.DeserializeObject<AnalyzeConfig>(fileContent);
             _logger.LogInformation("config file loaded.");
 

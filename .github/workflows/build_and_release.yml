@@ -11,16 +11,10 @@ on:
     tags:
       - 'v*'
 
-defaults:
-  run:
-    shell: pwsh
-
 jobs:
 
-  build:
+  build_gui:
     runs-on: windows-latest
-    env:
-      SOLUTION_FILE: GenshinTimeSplitter.sln
 
     steps:
     - name: Checkout
@@ -29,44 +23,178 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+          8.0.x
+          9.0.x
 
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
 
     - name: Restore the application
-      run: msbuild ${{ env.SOLUTION_FILE }} /t:Restore /p:Configuration=Release
+      working-directory: GenshinTimeSplitter
+      shell: pwsh
+      run: msbuild GenshinTimeSplitter.csproj /t:Restore /p:Configuration=Release
 
-    - name: Publish the application to folder
-      run: msbuild ${{ env.SOLUTION_FILE }} /t:publish /p:Configuration=Release /p:PublishDir=publish /p:PublishProfile=win10-x64
+    - name: Publish the application
+      working-directory: GenshinTimeSplitter
+      shell: pwsh
+      run: msbuild GenshinTimeSplitter.csproj /t:publish /p:PublishProfile=win-x64
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: GenshinTimeSplitter_x64
-        path: ./GenshinTimeSplitter/publish/*
+        path: ./GenshinTimeSplitter/publish/win-x64/*
 
-  release:
+  build_cli:
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [ "win-x64", "linux-arm", "linux-x64", "osx-x64", "osx-arm64" ]
     runs-on: windows-latest
-    needs: [ build ]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install .NET SDKs
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          9.0.x
+
+    - name: Publish the application
+      working-directory: CLI
+      run: |
+        dotnet publish -p:PublishProfile=${{ matrix.profile }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: GenshinTimeSplitter_CLI_${{ matrix.profile }}
+        path: ./CLI/publish/${{ matrix.profile }}/*
+
+  test_cli:
+    needs: [ build_cli ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            profile: win-x64
+          # ubuntu-22.04-arm is ARM64, but linux-arm is ARM32.
+          # GitHub Actions is not supported ARM32 Runner.
+          # - os: ubuntu-22.04-arm
+          #   profile: linux-arm
+          - os: ubuntu-22.04
+            profile: linux-x64
+          - os: macos-latest    # Arm64
+            profile: osx-arm64
+          - os: macos-13        # x64
+            profile: osx-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: GenshinTimeSplitter_CLI_${{ matrix.profile }}
+        path: ./CLI
+
+    - name: Download test movie file
+      working-directory: CLI
+      run: |
+        pip install gdown
+        gdown 141uS_pVkPIzENDRykCIsCLCg42iHCpdM
+
+    - name: Run cli for test on Ubuntu
+      if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      working-directory: CLI
+      run: |
+        # install dependencies
+        sudo apt-get update -y 
+        sudo apt-get install -y --no-install-recommends \
+          apt-transport-https \
+          software-properties-common \
+          ca-certificates \
+          g++ \
+          make \
+          cmake \
+          libtbb-dev \
+          libatlas-base-dev \
+          libgtk2.0-dev \
+          libavcodec-dev \
+          libavformat-dev \
+          libswscale-dev \
+          libdc1394-dev \
+          libxine2-dev \
+          libv4l-dev \
+          libtheora-dev \
+          libvorbis-dev \
+          libxvidcore-dev \
+          libopencore-amrnb-dev \
+          libopencore-amrwb-dev \
+          x264 \
+          libtesseract-dev
+        sudo ldconfig
+
+        # check dependencies
+        ldd libOpenCvSharpExtern.so
+
+        # run
+        chmod +x GenshinTimeSplitterCLI
+        time ./GenshinTimeSplitterCLI -f test.mp4
+
+        # output result
+        cat test.csv
+
+    - name: Run cli for test on MacOS
+      if: ${{ startsWith(matrix.os, 'macos') }}
+      working-directory: CLI
+      run: |
+        # install dependencies
+        brew install wget pkg-config mono-libgdiplus gtk+ ffmpeg@4 glog yasm harfbuzz jpeg libpng libtiff openjpeg metis openblas opencore-amr protobuf tbb webp # openexr
+
+        # show dotnet version
+        dotnet --info
+
+        # check dependencies
+        otool -L libOpenCvSharpExtern.dylib
+
+        # run
+        chmod +x GenshinTimeSplitterCLI
+        time ./GenshinTimeSplitterCLI -f test.mp4
+
+        # output result
+        cat test.csv
+
+    - name: Run cli for test on Windows
+      if: ${{ startsWith(matrix.os, 'windows') }}
+      working-directory: CLI
+      run: |
+        # run
+        Measure-Command { .\GenshinTimeSplitterCLI.exe -f test.mp4 }
+
+        # output result
+        cat test.csv
+
+  prepare_release:
     if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ build_gui, test_cli ]
+    runs-on: windows-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Get version
       id: version
+      shell: pwsh
       run: |
-        $path = "GenshinTimeSplitter\GenshinTimeSplitter.csproj"
+        $path = ".\version.props"
         [xml]$csproj = Get-Content $path
         $version = $csproj.Project.PropertyGroup.FileVersion
         Write-Output "version=$version" >> $Env:GITHUB_OUTPUT
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: GenshinTimeSplitter_x64
-        path: ./x64
-    - name: Zip artifacts
-      run: Compress-Archive -Path ./x64/* -DestinationPath ./GenshinTimeSplitter_x64.zip
     - name: release
       uses: actions/create-release@v1.1.4
       id: create_release
@@ -77,12 +205,35 @@ jobs:
         tag_name: ${{ github.ref }}
       env:
         GITHUB_TOKEN: ${{ github.token }}
-    - name: upload linux artifact
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ prepare_release ]
+    strategy:
+      matrix:
+        artifact_name:
+          - "GenshinTimeSplitter_x64"
+          - "GenshinTimeSplitter_CLI_win-x64"
+          - "GenshinTimeSplitter_CLI_linux-arm"
+          - "GenshinTimeSplitter_CLI_linux-x64"
+          - "GenshinTimeSplitter_CLI_osx-x64"
+          - "GenshinTimeSplitter_CLI_osx-arm64"
+    runs-on: windows-latest
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: ./download
+    - name: Zip artifacts
+      shell: pwsh
+      run: Compress-Archive -Path ./download/* -DestinationPath ./${{ matrix.artifact_name }}.zip
+    - name: upload release artifact
       uses: actions/upload-release-asset@v1.0.2
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./GenshinTimeSplitter_x64.zip
-        asset_name: GenshinTimeSplitter_x64.zip
+        upload_url: ${{ needs.prepare_release.outputs.upload_url }}
+        asset_path: ./${{ matrix.artifact_name }}.zip
+        asset_name: ${{ matrix.artifact_name }}.zip
         asset_content_type: application/zip

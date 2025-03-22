@@ -34,6 +34,10 @@ GUI版をマルチプラットフォーム/コマンドラインから実行で�
    ```sh
    chmod +x GenshinTimeSplitterCLI
    ```
+1. 実行ファイルに自己署名
+   ```sh
+   codesign -s - ./GenshinTimeSplitterCLI
+   ```
 
 ### Linux
 

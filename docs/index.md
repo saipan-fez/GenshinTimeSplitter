@@ -8,9 +8,10 @@
 
 ## ダウンロード/インストール
 
+Windows のみ
 [GenshinTimeSplitter_x64.zip 最新版](https://github.com/saipan-fez/GenshinTimeSplitter/releases/latest/download/GenshinTimeSplitter_x64.zip)
 
-CLI版: [こちらのページ](./cli.md)
+CLI版(Win/Mac/Linux対応): [こちらのページ](./cli.md)
 
 1. 上記リンクからダウンロード
 1. ダウンロードしたzipファイルを任意のフォルダへ展開

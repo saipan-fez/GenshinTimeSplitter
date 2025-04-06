@@ -14,6 +14,10 @@ public record struct AnalyzeResult(
 // so not output to csv file.
 public readonly record struct SectionInfo()
 {
+    [JsonIgnore]
+    [Ignore]
+    public readonly TimeSpan TimePerFrame { get; init; }
+
     [JsonProperty]
     [Index(0)]
     [Name("no")]
@@ -44,7 +48,7 @@ public readonly record struct SectionInfo()
     [Name("seconds_from_section_start_to_map_open")]
     public readonly double SecondsFromSectionStartToMapOpened =>
         MapOpenedTimeSpan.HasValue ?
-            (MapOpenedTimeSpan.Value- SectionStartedTimeSpan).TotalSeconds :
+            (MapOpenedTimeSpan.Value- SectionStartedTimeSpan + TimePerFrame).TotalSeconds :
             0d;
 
     [JsonProperty]
@@ -52,7 +56,7 @@ public readonly record struct SectionInfo()
     [Name("seconds_from_section_start_to_load_start")]
     public readonly double SecondsFromSectionStartToLoadScreenStarted =>
         LoadScreenStartedTimeSpan.HasValue ?
-            (LoadScreenStartedTimeSpan.Value - SectionStartedTimeSpan).TotalSeconds :
+            (LoadScreenStartedTimeSpan.Value - SectionStartedTimeSpan + TimePerFrame).TotalSeconds :
             0d;
 
     [JsonProperty]
@@ -60,7 +64,7 @@ public readonly record struct SectionInfo()
     [Name("seconds_from_section_start_to_load_end")]
     public readonly double SecondsFromSectionStartToLoadScreenFinished =>
         LoadScreenFinishedTimeSpan.HasValue ?
-            (LoadScreenFinishedTimeSpan.Value - SectionStartedTimeSpan).TotalSeconds :
+            (LoadScreenFinishedTimeSpan.Value - SectionStartedTimeSpan + TimePerFrame).TotalSeconds :
             0d;
 }
 

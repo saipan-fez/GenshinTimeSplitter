@@ -19,7 +19,6 @@
 
 using GenshinTimeSplitter.Extensions;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using OpenCvSharp;
 using System;
 using System.Collections.Concurrent;
@@ -328,6 +327,7 @@ public sealed class SectionStartAnalyzer : IDisposable
         var sectionInfo = new SectionInfo()
         {
             No = 1,
+            TimePerFrame = timePerFrame,
             SectionStartedTimeSpan = analyzeStartFrame.FrameTimeSpan
         };
         foreach (var group in frameGroups)

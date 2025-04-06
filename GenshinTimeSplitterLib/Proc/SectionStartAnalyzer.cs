@@ -352,6 +352,7 @@ public sealed class SectionStartAnalyzer : IDisposable
                 sectionInfo = new SectionInfo()
                 {
                     No = sectionInfo.No + 1,
+                    TimePerFrame = timePerFrame,
                     SectionStartedTimeSpan = nextSecionStartTime
                 };
             }

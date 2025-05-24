@@ -50,6 +50,7 @@ The specifications for each Key are as follows:
 |　SectionStartedTimeSpan|Time within the video when the section started|
 |　MapOpenedTimeSpan|(reserved) always null|
 |　LoadScreenStartedTimeSpan|Time within the video when the loading screen appeared|
+|　LoadScreenFinishedTimeSpan|Time within the video when the loading screen disappeared|
 |　SecondsFromSectionStartToMapOpened|(reserved) always null|
 |　SecondsFromSectionStartToLoadScreenStarted|Time from the start of the section to the appearance of the loading screen (in seconds)|
 |　SecondsFromSectionStartToLoadScreenFinished|Time from the start of the section to the end of the loading screen (in seconds)|

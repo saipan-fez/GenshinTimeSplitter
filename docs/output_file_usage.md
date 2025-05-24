@@ -49,6 +49,6 @@ VLC MediaPlayer で下記のよう設定することでスムーズに精鋭の�
 |　SectionStartedTimeSpan|セクションが開始した動画内時間|
 |　MapOpenedTimeSpan|(reserved)always null|
 |　LoadScreenStartedTimeSpan|ロード画面が表示された動画内時間|
-|　SecondsFromSectionStartToMapOpened|(reserved)always null|
+|　LoadScreenFinishedTimeSpan|ロード画面が消えた動画内時間|
 |　SecondsFromSectionStartToLoadScreenStarted|セクション開始からロード画面表示までの時間(秒)|
 |　SecondsFromSectionStartToLoadScreenFinished|セクション開始からロード画面終了までの時間(秒)|

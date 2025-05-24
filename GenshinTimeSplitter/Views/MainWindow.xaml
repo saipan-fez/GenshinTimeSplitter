@@ -9,11 +9,12 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:MainWindowViewModel}"
         ResizeMode="NoResize"
-        Width="500" Height="450"
-        MaxWidth="500" MaxHeight="450"
+        Width="500" Height="550"
+        MaxWidth="500" MaxHeight="550"
         Title="Genshin Sction Splitter">
     <Window.Resources>
         <v:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
+        <v:RadioButtonEnumConverter x:Key="RadioButtonEnumConverter" />
     </Window.Resources>
     <StackPanel Margin="10" v:Spacing.Vertical="20" Orientation="Vertical">
         <StackPanel v:Spacing.Vertical="5"
@@ -60,6 +61,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="5"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="5"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -77,6 +80,19 @@
                 <TextBlock Grid.Row="6" Grid.Column="0" Text="FalseDetection(ms)"/>
                 <xctk:IntegerUpDown Grid.Row="6" Grid.Column="1" Width="60" HorizontalAlignment="Left"
                                     Value="{Binding FalseDetectionMs.Value}" Minimum="0" Maximum="1000"/>
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="OutputMovie" VerticalAlignment="Center"/>
+                <StackPanel Grid.Row="8" Grid.Column="1">
+                    <RadioButton Content="OFF"
+                                 IsChecked="{Binding OutputSectionMovie.Value, ConverterParameter=Disable, Converter={StaticResource RadioButtonEnumConverter}}"/>
+                    <RadioButton Content="ON (Copy / Fast, Not acculate)"
+                                 IsChecked="{Binding OutputSectionMovie.Value, ConverterParameter=EnableNoEncode, Converter={StaticResource RadioButtonEnumConverter}}"/>
+                    <RadioButton Content="ON (Re-Encode / Slow, Acculate)"
+                                 IsChecked="{Binding OutputSectionMovie.Value, ConverterParameter=EnableReEncode, Converter={StaticResource RadioButtonEnumConverter}}"/>
+                    <TextBlock Text="If you select ON, you must install FFmpeg." Foreground="Red"/>
+                </StackPanel>
+                <Button Grid.Row="8" Grid.Column="1" Width="100" Height="40" HorizontalAlignment="Right"
+                        Content="Install FFmpeg"
+                        Click="InstallFFmpegButton_Click"/>
             </Grid>
         </StackPanel>
         <Grid>
@@ -87,6 +103,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -115,7 +132,9 @@
             <TextBlock Grid.Column="1" Grid.Row="5" Text="{Binding CurrentFrame.Value}"/>
             <TextBlock Grid.Column="0" Grid.Row="6" Text="Found Frame: "/>
             <TextBlock Grid.Column="1" Grid.Row="6" Text="{Binding FoundFrame.Value}"/>
-            <StackPanel Grid.Column="3" Grid.RowSpan="7" v:Spacing.Vertical="10" Orientation="Vertical"
+            <TextBlock Grid.Column="0" Grid.Row="7" Text="Output Movie: "/>
+            <TextBlock Grid.Column="1" Grid.Row="7" Text="{Binding OutputSectionMovieProgress.Value}"/>
+            <StackPanel Grid.Column="3" Grid.RowSpan="8" v:Spacing.Vertical="10" Orientation="Vertical"
                         HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <Button Width="80" Content="Start" Command="{Binding StartAnalyzeCommand}"/>
                 <Button Width="80" Content="Cancel" Command="{Binding CancelAnalyzeCommand}"/>

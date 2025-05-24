@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using OpenCvSharp;
+using System.Diagnostics;
 using System.Text;
 
 var app = ConsoleApp.Create();
@@ -71,6 +72,12 @@ public class MyCommands(
     /// <param name="forceOverWritten">-y,
     /// overwrite result files.
     /// </param>
+    /// <param name="outputSectionMovie">-out-movie,
+    /// output section movies.
+    /// Disable: no output.
+    /// EnableNoEncode: fast and not acculate output.
+    /// EnableReEncode: slow and acculate output.
+    /// </param>
     /// <param name="token"></param>
     /// <returns></returns>
     [Command("")]
@@ -84,6 +91,7 @@ public class MyCommands(
         int falseDetectionMilliSeconds = 200,
         byte parallelCount = 0,
         bool forceOverWritten = false,
+        OutputSectionMovieMode outputSectionMovie = OutputSectionMovieMode.Disable,
         CancellationToken token = default)
     {
         _logger.LogDebug("arguments");
@@ -96,6 +104,7 @@ public class MyCommands(
         _logger.LogDebug("falseDetectionMilliSeconds: {falseDetectionMilliSeconds}", falseDetectionMilliSeconds);
         _logger.LogDebug("parallelCount: {parallelCount}", parallelCount);
         _logger.LogDebug("forceOverWritten: {forceOverWritten}", forceOverWritten);
+        _logger.LogDebug("outputSectionMovie: {outputSectionMovie}", outputSectionMovie);
 
         // validate inputs
         //   validation of regions is at SectionStartAnalyzer.AnalyzeAsync()
@@ -113,6 +122,16 @@ public class MyCommands(
         {
             Console.WriteLine("configration file is not found.");
             return -1;
+        }
+
+        // check FFmpeg available
+        if (outputSectionMovie is OutputSectionMovieMode.EnableNoEncode or OutputSectionMovieMode.EnableReEncode)
+        {
+            if (!IsFFmpegAvailable())
+            {
+                Console.WriteLine("ffmpeg is not available. Please install FFmpeg.");
+                return -1;
+            }
         }
 
         try
@@ -316,6 +335,68 @@ public class MyCommands(
                 default:
                     continue;
             }
+        }
+    }
+
+    private bool IsFFmpegAvailable()
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg",
+            Arguments = "-version",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        try
+        {
+            using var process = Process.Start(psi);
+            if (process == null)
+            {
+                _logger.LogError("Could not start FFmpeg.");
+                return false;
+            }
+
+            process.WaitForExit(TimeSpan.FromSeconds(3));
+
+            if (!process.HasExited)
+            {
+                process.Kill();
+                _logger.LogError("FFmpeg is time out.");
+                return false;
+            }
+
+            var stdout = process.StandardOutput.ReadToEnd();
+            var stderr = process.StandardError.ReadToEnd();
+            if (process.ExitCode == 0)
+            {
+                if (stdout.Contains("ffmpeg version"))
+                {
+                    _logger.LogInformation("ffmpeg found.");
+                    return true;
+                }
+                else
+                {
+                    _logger.LogError("ffmpeg found, but did not return expected version info.");
+                    _logger.LogError("stdout:{stdout}", stdout);
+                    _logger.LogError("stderr:{stderr}", stderr);
+                    return false;
+                }
+            }
+            else
+            {
+                _logger.LogError("ffmpeg exited with code {ExitCode}.", process.ExitCode);
+                _logger.LogError("stdout:{stdout}", stdout);
+                _logger.LogError("stderr:{stderr}", stderr);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "error");
+            return false;
         }
     }
 }

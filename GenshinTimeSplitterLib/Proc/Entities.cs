@@ -1,5 +1,6 @@
 ﻿using CsvHelper.Configuration.Attributes;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using OpenCvSharp;
 using System;
 
@@ -68,13 +69,22 @@ public readonly record struct SectionInfo()
             0d;
 }
 
+[JsonConverter(typeof(StringEnumConverter))]
+public enum OutputSectionMovieMode
+{
+    Disable,
+    EnableNoEncode,
+    EnableReEncode,
+}
+
 [JsonObject]
 public record struct AnalyzeConfig(
     [JsonProperty] Size TargetMovieResolution = new(),
     [JsonProperty] byte DiffThreashold = 3,
     [JsonProperty] Rect[] AnalyzeRegions = null,
     [JsonProperty] int FalseDetectionMilliSeconds = 200,
-    [JsonProperty] byte ParallelCount = 0)
+    [JsonProperty] byte ParallelCount = 0,
+    [JsonProperty] OutputSectionMovieMode OutputSectionMovie = OutputSectionMovieMode.Disable)
 {
     public static AnalyzeConfig GetDefault(Size s)
     {

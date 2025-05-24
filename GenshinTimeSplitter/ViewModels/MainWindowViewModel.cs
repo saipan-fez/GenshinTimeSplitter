@@ -36,6 +36,7 @@ public class MainWindowViewModel : IDisposable
     public ReactiveProperty<byte> DiffThreshold { get; } = new(0);
     public ReactiveProperty<byte> ThreadNum { get; } = new(0);
     public ReactiveProperty<int> FalseDetectionMs { get; } = new(0);
+    public ReactiveProperty<OutputSectionMovieMode> OutputSectionMovie { get; } = new(OutputSectionMovieMode.Disable);
 
     public ReadOnlyReactiveProperty<string> MovieFilePath { get; }
     public ReadOnlyReactiveProperty<AnalyzeStateType> AnalyzeState { get; }
@@ -46,6 +47,7 @@ public class MainWindowViewModel : IDisposable
     public ReadOnlyReactiveProperty<string> TotalFrame { get; }
     public ReadOnlyReactiveProperty<string> CurrentFrame { get; }
     public ReadOnlyReactiveProperty<string> FoundFrame { get; }
+    public ReadOnlyReactiveProperty<string> OutputSectionMovieProgress { get; }
 
     public AsyncReactiveCommand BrowseMovieFileCommand { get; }
     public AsyncReactiveCommand StartAnalyzeCommand { get; }
@@ -128,6 +130,20 @@ public class MainWindowViewModel : IDisposable
             .Select(x => x.IsEmpty ? "" : $"{x.SectionFoundCount:#,0}")
             .ToReadOnlyReactiveProperty()
             .AddTo(_disposables);
+        OutputSectionMovieProgress = _progress
+            .Select(x =>
+            {
+                if (x.IsEmpty)
+                    return "";
+                if (OutputSectionMovie.Value is OutputSectionMovieMode.Disable)
+                    return "-";
+                else
+                    return x.TotalOutputSectionMovieCount != -1 ?
+                        $"{x.CurrentOutputSectionMovieCount}/{x.TotalOutputSectionMovieCount}":
+                        $"-";
+            })
+            .ToReadOnlyReactiveProperty()
+            .AddTo(_disposables);
         #endregion
 
         #region Command
@@ -203,6 +219,16 @@ public class MainWindowViewModel : IDisposable
                 _logger.LogDebug("FalseDetectionMilliSeconds is updated. value:{value}", x);
 
                 _analyzeConfig = _analyzeConfig.Value with { FalseDetectionMilliSeconds = x };
+                await SaveAnalyzeConfigAsync();
+            }
+        }).AddTo(_disposables);
+        OutputSectionMovie.Subscribe(async x =>
+        {
+            if (_analyzeConfig.HasValue && x != _analyzeConfig.Value.OutputSectionMovie)
+            {
+                _logger.LogDebug("OutputSectionMovie is updated. value:{value}", x);
+
+                _analyzeConfig = _analyzeConfig.Value with { OutputSectionMovie = x };
                 await SaveAnalyzeConfigAsync();
             }
         }).AddTo(_disposables);
@@ -289,6 +315,7 @@ public class MainWindowViewModel : IDisposable
             DiffThreshold.Value = _analyzeConfig.Value.DiffThreashold;
             ThreadNum.Value = _analyzeConfig.Value.ParallelCount;
             FalseDetectionMs.Value = _analyzeConfig.Value.FalseDetectionMilliSeconds;
+            OutputSectionMovie.Value = _analyzeConfig.Value.OutputSectionMovie;
 
             var movieEndDateTime = _rangeBaseDateTime + _sectionStartAnalyzer.MovieTimeSpan;
             _maximumRange = movieEndDateTime;

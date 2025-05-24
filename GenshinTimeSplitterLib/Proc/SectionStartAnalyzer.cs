@@ -17,6 +17,7 @@
 //#define LOAD_FRAME_INFO_COLLECTION
 #endif
 
+using FFMpegCore;
 using GenshinTimeSplitter.Extensions;
 using Microsoft.Extensions.Logging;
 using OpenCvSharp;
@@ -24,13 +25,20 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace GenshinTimeSplitter.Proc;
 
-public readonly record struct Progress(double Fps, int TotalFrame, int CurrentFrame, int SectionFoundCount)
+public readonly record struct Progress(
+    double Fps,
+    int TotalFrame,
+    int CurrentFrame,
+    int SectionFoundCount,
+    int TotalOutputSectionMovieCount,
+    int CurrentOutputSectionMovieCount)
 {
     public static Progress Empty() => new() { IsEmpty = true };
     public bool IsEmpty { get; private init; } = false;
@@ -208,6 +216,12 @@ public sealed class SectionStartAnalyzer : IDisposable
             var sectionInfoCollection = GetSectionInfoCollection(_frameInfoCollection, timeSpanAsFalseDetection);
             _logger.LogDebug("got section info. count:{count}", sectionInfoCollection.Length);
 
+            // output sction movies
+            if (config.OutputSectionMovie is OutputSectionMovieMode.EnableNoEncode or OutputSectionMovieMode.EnableReEncode)
+            {
+                await CreateSectionMoviesAsync(config, sectionInfoCollection, token);
+            }
+
             return new AnalyzeResult(
                 analyzeStartTimeSpan,
                 analyzeEndTimeSpan,
@@ -226,6 +240,61 @@ public sealed class SectionStartAnalyzer : IDisposable
         {
             throw;
         }
+    }
+
+    private async Task CreateSectionMoviesAsync(AnalyzeConfig config, SectionInfo[] sectionInfoCollection, CancellationToken token)
+    {
+        var outputDirName = Path.GetFileNameWithoutExtension(_filePath);
+        var outputDirFullPath = Path.Combine(Path.GetDirectoryName(_filePath), outputDirName);
+        var outputDir = new DirectoryInfo(outputDirFullPath);
+        _logger.LogDebug("output dir:{outputdir}", outputDirFullPath);
+
+        if (!outputDir.Exists)
+        {
+            outputDir.Create();
+        }
+
+        var zeroPaddingLength = Math.Max(1, sectionInfoCollection.Length.ToString().Length);
+
+        var outputFileExt = Path.GetExtension(_filePath);
+        for (var i = 0; i < sectionInfoCollection.Length; i++)
+        {
+            token.ThrowIfCancellationRequested();
+
+            InvokeOutputSectionMovieProgressChanged(sectionInfoCollection.Length, i);
+
+            var section = sectionInfoCollection[i];
+            if (section.SectionStartedTimeSpan == section.LoadScreenStartedTimeSpan.Value)
+            {
+                _logger.LogDebug("SectionStartedTimeSpan and LoadScreenStartedTimeSpan are same value. value:{value}", section.SectionStartedTimeSpan);
+                continue;
+            }
+
+            // ex) 0001.mp4
+            var outputFileName = $"{string.Format($"{{0:D{zeroPaddingLength}}}", i + 1)}{outputFileExt}";
+            var outputFullPath = Path.Combine(outputDir.FullName, outputFileName);
+
+            _logger.LogDebug("start to output file. index:{index} file:{file}", i, outputFullPath);
+
+            // output section movie using FFmpeg
+            await FFMpegArguments
+                .FromFileInput(_filePath, true, options => options
+                    .Seek(section.SectionStartedTimeSpan)
+                    .EndSeek(section.LoadScreenStartedTimeSpan.Value))
+                .OutputToFile(outputFullPath, true, option =>
+                {
+                    if (config.OutputSectionMovie == OutputSectionMovieMode.EnableNoEncode)
+                    {
+                        // add argument "-c copy"
+                        //   This argument enables faster video creation.
+                        //   However, it may result in corruption during the initial few seconds of footage.
+                        option.CopyChannel(FFMpegCore.Enums.Channel.Both);
+                    }
+                })
+                .CancellableThrough(token)
+                .ProcessAsynchronously();
+        }
+        InvokeOutputSectionMovieProgressChanged(sectionInfoCollection.Length, sectionInfoCollection.Length);
     }
 
     private (TimeSpan posTime, int posFrames) GetPos(TimeSpan timeSpan)
@@ -458,7 +527,26 @@ public sealed class SectionStartAnalyzer : IDisposable
     private void InvokeProgressChanged(int currentFrame, int sectionFoundCount)
     {
         _logger.LogTrace("ProgressChanged. current:{current} found:{found}", currentFrame, sectionFoundCount);
-        ProgressChanged?.Invoke(this, new Progress(_fps, _totalFrameCount, currentFrame, sectionFoundCount));
+        var progress = new Progress(
+            _fps,
+            _totalFrameCount,
+            currentFrame,
+            sectionFoundCount,
+            -1,
+            -1);
+        ProgressChanged?.Invoke(this, progress);
+    }
+
+    private void InvokeOutputSectionMovieProgressChanged(int totalOutputSectionMovieCount, int currentOutputSectionMovieCount)
+    {
+        _logger.LogTrace("ProgressChanged(OutputSectionMovie). current:{current} total:{total}", currentOutputSectionMovieCount, totalOutputSectionMovieCount);
+        var progress = new Progress(_fps,
+            _totalFrameCount,
+            _totalFrameCount,
+            _foundSectionFrameCount,
+            totalOutputSectionMovieCount,
+            currentOutputSectionMovieCount);
+        ProgressChanged?.Invoke(this, progress);
     }
 
     private enum ScreenType

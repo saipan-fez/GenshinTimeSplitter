@@ -1,7 +1,7 @@
 # Genshin Time Splitter
 
 This application is designed for elite enemies TA in "Genshin Impact" by HoYoVerse,  
-analyzing videos and outputting csv/json/xspf files segmented by loading screen times.  
+analyzing videos and outputting csv/json/xspf/video(optional) files segmented by loading screen times.  
 You can calculate time efficiency per elite enemy using the output files.  
 
 ![](./img/app.png)
@@ -76,17 +76,39 @@ Generally, there is no need to change it.
 The time (in milliseconds) used to determine if a warp is a false detection.  
 Times shorter than this value will not be treated as a warp.  
 
-##### If a warp is incorrectly detected when there is no warp
+##### ・If a warp is incorrectly detected when there is no warp
 
 Increase the number.  
 Note that it is recommended to set the maximum value to `300`.  
 Setting it too high may prevent recognition of normal warps.
 
-##### If a warp is not detected when there actually is one
+##### ・If a warp is not detected when there actually is one
 
 Decrease the number.  
 Note that it is recommended to set the minimum value to `90`.  
 Setting it too low may cause non-warping areas to be mistakenly recognized as warps.
+
+#### Output Movie
+
+Determines whether to output a separate video for each warp.
+
+!!! note
+    To output videos, [FFmpeg]([https://](https://ffmpeg.org/)) must be installed.  
+    You can install it via the "Install FFmpeg" button or by installing it separately.
+
+##### ・OFF
+
+No video will be output.
+
+##### ・ON (Copy / Fast, Not Accurate)
+
+The video is output without re-encoding.  
+This allows for quick creation, but the first few seconds of footage may be corrupted.
+
+##### ・ON (Re-Encode / Slow, Accurate)
+
+The video is re-encoded and then output.  
+This requires more machine power and takes longer to create, but the footage will not be corrupted.
 
 ## Planned Features
 
